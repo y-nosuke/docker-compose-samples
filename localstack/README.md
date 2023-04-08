@@ -1,5 +1,7 @@
 # localstack
 
+これはlocalstackの Docker-Compose です。
+
 ## 事前準備
 
 ```sh
@@ -13,14 +15,6 @@ complete -C '/home/linuxbrew/.linuxbrew/bin/aws_completer' awslocal
 ```
 
 ## 実行
-
-```sh
-# 起動
-docker compose up -d
-
-# 停止
-docker compose down
-```
 
 ```sh
 # S3
