@@ -34,5 +34,6 @@ awslocal sqs list-queues
 - [LocalStack](https://docs.localstack.cloud/overview/)
 - [localstack/localstack](https://github.com/localstack/localstack)
 - [localstack/awscli-local](https://github.com/localstack/awscli-local)
+- [localstack/localstack dockerhub](https://hub.docker.com/r/localstack/localstack)
 - [localStack Cockpit](https://localstack.cloud/products/cockpit/)
 - [【AWS】LocalStackを使ってみる](https://qiita.com/Shoma0210/items/258e8422d5341160624b)

@@ -23,6 +23,8 @@ X-Forwarded-Server: 9fb64ad7849c
 X-Real-Ip: 172.22.0.1
 ```
 
+## ダッシュボード
+
 - [dashboard](http://localhost:8080/dashboard/#/)
 
 ## 参考

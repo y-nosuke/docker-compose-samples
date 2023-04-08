@@ -2,6 +2,21 @@
 
 これはKeyCloakの Docker-Compose です。
 
+## 事前準備
+
+hostsファイルに`keycloak.localhost`を登録します。
+traefixによりリバースプロキシを利用するための設定です。
+
+```
+# Windwos
+# C:\Windows\System32\drivers\etc\hosts
+127.0.0.1 keycloak.localhost
+```
+
+## 管理画面
+
+- [管理画面](http://keycloak.localhost/)
+
 ## 参考
 
 - [keycloak.org](https://www.keycloak.org/guides)

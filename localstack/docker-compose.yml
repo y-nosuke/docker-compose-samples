@@ -16,3 +16,9 @@ services:
     volumes:
       - ./docker/volumes:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - docker_compose_samples
+
+networks:
+  docker_compose_samples:
+    external: true

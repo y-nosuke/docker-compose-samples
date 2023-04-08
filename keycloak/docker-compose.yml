@@ -13,6 +13,8 @@ services:
       POSTGRES_PASSWORD: keycloak
     volumes:
       - ./docker/volumes/postgresql:/var/lib/postgresql/data
+    networks:
+      - docker_compose_samples
 
   # keycloak
   keycloak:
@@ -20,10 +22,10 @@ services:
       context: ./
       dockerfile: Dockerfile
     container_name: keycloak
-    hostname: localhost
+    hostname: keycloak.localhost
     restart: always
-    ports:
-      - 8080:8080
+    # ports:
+    #   - 8080:8080
     environment:
       - TZ=Asia/Tokyo
       - KEYCLOAK_ADMIN=admin
@@ -34,5 +36,15 @@ services:
       - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
     depends_on:
       - postgres
+    networks:
+      - docker_compose_samples
     command:
       - start-dev
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`keycloak.localhost`)"
+      - "traefik.http.routers.keycloak.entrypoints=web"
+
+networks:
+  docker_compose_samples:
+    external: true
