@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+  # postgres
+  postgres:
+    image: postgres:13.0-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      TZ: Asia/Tokyo
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - ./docker/volumes/postgresql:/var/lib/postgresql/data
+
+  # keycloak
+  keycloak:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: keycloak
+    hostname: localhost
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      - TZ=Asia/Tokyo
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HOSTNAME=localhost
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=keycloak
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+    depends_on:
+      - postgres
+    command:
+      - start-dev
