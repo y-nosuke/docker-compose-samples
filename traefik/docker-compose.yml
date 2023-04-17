@@ -5,23 +5,26 @@ services:
   traefik:
     image: "traefik:v2.9"
     container_name: "traefik"
+    restart: always
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      # - ./docker/resources/traefik/traefik.yaml:/etc/traefik/traefik.yaml
+    networks:
+      - docker_compose_samples
     command:
       #- "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-    ports:
-      - "80:80"
-      - "8080:8080"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    networks:
-      - docker_compose_samples
 
   whoami:
     image: "traefik/whoami"
     container_name: "simple-service"
+    restart: always
     networks:
       - docker_compose_samples
     labels:
