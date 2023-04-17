@@ -1,0 +1,45 @@
+version: '3.7'
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: always
+    # ports:
+    #   - '3306:3306'
+    environment:
+      MYSQL_USER: sample
+      MYSQL_PASSWORD: sample
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: sample
+    volumes:
+      - ./docker/resources/mysql/initdb.d:/docker-entrypoint-initdb.d
+      - ./docker/volumes/mysql:/var/lib/mysql
+    networks:
+      - docker_compose_samples
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    hostname: phpmyadmin.localhost
+    restart: always
+    # ports:
+    #   - "80:80"
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOSTS: mysql
+      PMA_USER: sample
+      PMA_PASSWORD: sample
+    volumes:
+      - ./docker/volumes/phpmyadmin/sessions:/sessions
+    depends_on:
+      - mysql
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin.rule=Host(`phpmyadmin.localhost`)"
+      - "traefik.http.routers.phpmyadmin.entrypoints=web"
+
+networks:
+  docker_compose_samples:
+    external: true
