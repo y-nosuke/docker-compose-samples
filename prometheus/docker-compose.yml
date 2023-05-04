@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    hostname: prometheus.localhost
+    restart: always
+    # ports:
+    #   - '9090:9090'
+    volumes:
+      - ./docker/resources/prometheus:/etc/prometheus
+      - ./docker/volumes/prometheus:/prometheus
+    networks:
+      - docker_compose_samples
+    command: "--config.file=/etc/prometheus/prometheus.yml --web.external-url=http://prometheus.localhost/"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.localhost`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+
+  alertmanager:
+    image: prom/alertmanager
+    container_name: alertmanager
+    hostname: alertmanager.localhost
+    restart: always
+    # ports:
+    #   - '9093:9093'
+    volumes:
+      - ./docker/resources/alertmanager:/etc/alertmanager
+    networks:
+      - docker_compose_samples
+    command: "--config.file=/etc/alertmanager/alertmanager.yml --web.external-url=http://alertmanager.localhost/"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.alertmanager.rule=Host(`alertmanager.localhost`)"
+      - "traefik.http.routers.alertmanager.entrypoints=web"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    hostname: grafana.localhost
+    restart: always
+    # ports:
+    #   - 3000:3000
+    # environment:
+    #   GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - ./docker/volumes/grafana:/var/lib/grafana
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    hostname: node-exporter.localhost
+    restart: always
+    # ports:
+    #   - 9100:9100
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.node-exporter.rule=Host(`node-exporter.localhost`)"
+      - "traefik.http.routers.node-exporter.entrypoints=web"
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    hostname: mailhog.localhost
+    restart: always
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /tmp
+    volumes:
+      - ./docker/volumes/mailhog:/tmp
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailhog.rule=Host(`mailhog.localhost`)"
+      - "traefik.http.routers.mailhog.entrypoints=web"
+      - "traefik.http.services.mail.loadbalancer.server.port=8025"
+
+networks:
+  docker_compose_samples:
+    external: true
