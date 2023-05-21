@@ -18,6 +18,12 @@ services:
       - "14269:14269"
     environment:
       - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+      - BADGER_DIRECTORY_VALUE=/badger/data
+      - BADGER_DIRECTORY_KEY=/badger/key
+    volumes:
+      - ./docker/volumes/jeager:/badger
     networks:
       - docker_compose_samples
     labels:
