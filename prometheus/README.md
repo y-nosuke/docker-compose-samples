@@ -24,7 +24,6 @@ traefixによりリバースプロキシを利用するための設定です。
 - [grafana](http://grafana.localhost/)
 - [node-exporter](node-exporter.localhost)
 
-
 ## 動作確認
 
 ```
@@ -34,3 +33,4 @@ docker container stop node-exporter
 ## 参考
 
 - [DockerでPrometheus, Grafana, Alertmanagerを動かす](https://qiita.com/samskeyti/items/fbe8b78e47a5e4d6842a)
+- [Dashboards](https://grafana.com/grafana/dashboards/)
