@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  # nexus
+  nexus:
+    image: sonatype/nexus3
+    container_name: nexus
+    hostname: nexus.localhost
+    restart: always
+    environment:
+      TZ: Asia/Tokyo
+#      NEXUS_CONTEXT: nexus
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./docker/volumes/nexus:/nexus-data
+    ports:
+      - ${NEXUS_PORT:-8081}:8081
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nexus.rule=Host(`nexus.localhost`)"
+      - "traefik.http.routers.nexus.entrypoints=web"
+
+networks:
+  docker_compose_samples:
+    external: true
