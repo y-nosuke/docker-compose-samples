@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  log-generator:
+    image: mingrammer/flog
+    command:
+      - --loop
+      - --format=json
+      - --number=10 # number of log lines to generate per second
+      - --delay=100ms # delay between log lines
+      - --output=/var/log/generated-logs.txt
+      - --overwrite
+      - --type=log
+    volumes:
+      - ./docker/volumes/log:/var/log
+    networks:
+      - docker_compose_samples
+
+  loki:
+    image: grafana/loki:2.8.2
+    container_name: loki
+    # ports:
+    #   - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - docker_compose_samples
+
+  promtail:
+    image: grafana/promtail:2.8.2
+    container_name: promtail
+    volumes:
+      - ./docker/resources/promtail/config.yaml:/etc/promtail/config.yaml
+      - ./docker/volumes/log:/var/log
+    command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - docker_compose_samples
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    hostname: grafana.localhost
+    volumes:
+      - ./docker/resources/grafana/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    # ports:
+    #   - "3000:3000"
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+
+networks:
+  docker_compose_samples:
+    external: true
