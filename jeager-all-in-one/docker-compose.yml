@@ -1,10 +1,10 @@
 version: "3.8"
 
 services:
-  jeager:
+  jaeger:
     image: jaegertracing/all-in-one
-    container_name: jeager
-    hostname: jeager.localhost
+    container_name: jaeger
+    hostname: jaeger.localhost
     restart: always
     ports:
       - "6831:6831/udp"
@@ -23,14 +23,14 @@ services:
       - BADGER_DIRECTORY_VALUE=/badger/data
       - BADGER_DIRECTORY_KEY=/badger/key
     volumes:
-      - ./docker/volumes/jeager:/badger
+      - ./docker/volumes/jaeger:/badger
     networks:
       - docker_compose_samples
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jeager.rule=Host(`jeager.localhost`)"
-      - "traefik.http.routers.jeager.entrypoints=web"
-      - "traefik.http.services.jeager.loadbalancer.server.port=16686"
+      - "traefik.http.routers.jaeger.rule=Host(`jaeger.localhost`)"
+      - "traefik.http.routers.jaeger.entrypoints=web"
+      - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
 
 networks:
   docker_compose_samples:
