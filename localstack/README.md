@@ -7,27 +7,53 @@
 ```sh
 sudo apt install -y python3-pip
 pip install awscli-local
-
-which aws_completer
-vi .bashrc
-complete -C '/home/linuxbrew/.linuxbrew/bin/aws_completer' aws
-complete -C '/home/linuxbrew/.linuxbrew/bin/aws_completer' awslocal
 ```
+
+### bash
+
+```sh
+vi .bashrc
+complete -C $(which aws_completer) aws
+complete -C $(which aws_completer) awslocal
+```
+
+### zsh
+
+```sh
+vi .zshrc
+autoload bashcompinit && bashcompinit
+autoload -Uz compinit && compinit
+
+complete -C $(which aws_completer) aws
+complete -C $(which aws_completer) awslocal
+```
+
+- [Command completion](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-completion.html)
 
 ## 実行
 
+### S3
+
 ```sh
-# S3
 aws s3 mb s3://localstack-bucket --endpoint-url=http://localhost:4566
 awslocal s3 mb s3://localstack-bucket
 
 aws s3 ls --endpoint-url=http://localhost:4566
 awslocal s3 ls
-
-# sqs
-awslocal sqs create-queue --queue-name localstack-sqs
-awslocal sqs list-queues
+awslocal s3 ls s3://localstack-bucket/file.txt
 ```
+
+### sqs
+
+```sh
+awslocal sqs create-queue --queue-name localstack-sqs --region ap-northeast-1
+awslocal sqs list-queues --region ap-northeast-1
+awslocal sqs get-queue-url --queue-name localstack-sqs --region ap-northeast-1
+awslocal sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/localstack-sqs --region ap-northeast-1 --attribute-names All
+awslocal sqs delete-queue --queue-url http://localhost:4566/000000000000/localstack-sqs --region ap-northeast-1
+```
+
+- [AWS CLI Command Reference sqs](https://docs.aws.amazon.com/cli/latest/reference/sqs/)
 
 ## 参考
 
