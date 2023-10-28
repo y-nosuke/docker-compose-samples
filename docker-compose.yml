@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.8"
 
 services:
 
@@ -11,26 +11,13 @@ services:
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      # - ./docker/resources/traefik/traefik.yaml:/etc/traefik/traefik.yaml
     networks:
       - docker_compose_samples
     command:
-      #- "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-
-  whoami:
-    image: traefik/whoami
-    container_name: whoami
-    restart: always
-    networks:
-      - docker_compose_samples
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
-      - "traefik.http.routers.whoami.entrypoints=web"
 
 networks:
   docker_compose_samples:

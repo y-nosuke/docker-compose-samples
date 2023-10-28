@@ -12,10 +12,13 @@ services:
       MYSQL_PASSWORD: password
     volumes:
       - ./docker/volumes/mysql:/var/lib/mysql
+    networks:
+      - docker_compose_samples
 
   wordpress:
     image: wordpress:latest
     container_name: wordpress
+    hostname: wordpress.localhost
     restart: always
     environment:
       WORDPRESS_DB_HOST: mysql:3306
@@ -24,8 +27,8 @@ services:
       WORDPRESS_DB_PASSWORD: password
     volumes:
       - ./docker/volumes/wordpress/wp-content:/var/www/html/wp-content
-    ports:
-      - 8080:80
+    # ports:
+    #   - 80:80
     depends_on:
       - db
     networks:
