@@ -13,6 +13,20 @@ traefixによりリバースプロキシを利用するための設定です。
 127.0.0.1 adminer.localhost
 ```
 
+## triggerを使いたい場合
+
+以下を追加する。
+
+```yml
+services:
+  mysql:
+
+    ・・・
+
+    # TRIGGER作成のために必要
+    command: [ "--log_bin_trust_function_creators=1" ]
+```
+
 ## 管理画面
 
 - [adminer](http://adminer.localhost/)
