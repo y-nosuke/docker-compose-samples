@@ -17,6 +17,17 @@ traefixによりリバースプロキシを利用するための設定です。
 
 - [管理画面](http://keycloak.localhost/)
 
+## export & import
+
+```sh
+/opt/keycloak/bin/kc.sh export --file /tmp/realm.json --realm sample
+# exportした後はauthorizationSettingsを削除する。
+
+/opt/keycloak/bin/kc.sh import --file /tmp/realm.json
+```
+
+- [Importing and Exporting Realms](https://www.keycloak.org/server/importExport)
+
 ## 参考
 
 - [keycloak.org](https://www.keycloak.org/guides)
