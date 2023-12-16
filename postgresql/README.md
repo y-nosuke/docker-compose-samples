@@ -35,3 +35,5 @@ services:
 
 - [postgres dockerhub](https://hub.docker.com/_/postgres)
 - [adminer dockerhub](https://hub.docker.com/_/adminer/)
+
+- [【PostgreSQL】docker-composeで起動と初期データ投入](https://qiita.com/ke_suke0215/items/90deba2bf484293000fc)

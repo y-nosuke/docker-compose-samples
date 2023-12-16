@@ -14,6 +14,7 @@ services:
       POSTGRES_USER: sample
       POSTGRES_PASSWORD: sample
     volumes:
+      - ./docker/resources/postgresql/initdb.d:/docker-entrypoint-initdb.d
       - ./docker/volumes/postgresql:/var/lib/postgresql/data
     networks:
       - docker_compose_samples
