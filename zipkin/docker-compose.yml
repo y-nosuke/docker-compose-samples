@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    restart: always
+    ports:
+      - "9411:9411"
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.zipkin.rule=Host(`zipkin.localhost`)"
+      - "traefik.http.routers.zipkin.entrypoints=web"
+      - "traefik.http.services.zipkin.loadbalancer.server.port=9411"
+
+networks:
+  docker_compose_samples:
+    external: true
