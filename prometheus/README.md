@@ -7,8 +7,8 @@
 hostsファイルに`prometheus.localhost`を登録します。
 traefixによりリバースプロキシを利用するための設定です。
 
-```
-# Windwos
+```bash
+# Windows
 # C:\Windows\System32\drivers\etc\hosts
 127.0.0.1 prometheus.localhost
 127.0.0.1 alertmanager.localhost
@@ -26,7 +26,7 @@ traefixによりリバースプロキシを利用するための設定です。
 
 ## 動作確認
 
-```
+```bash
 docker container stop node-exporter
 ```
 

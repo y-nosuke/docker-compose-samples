@@ -8,7 +8,7 @@ hostsファイルに`otel-collector.localhost`を登録します。
 traefixによりリバースプロキシを利用するための設定です。
 
 ```sh
-# Windwos
+# Windows
 # C:\Windows\System32\drivers\etc\hosts
 # explorer "C:\Windows\System32\drivers\etc"
 127.0.0.1 otel-collector.localhost
