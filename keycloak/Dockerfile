@@ -1,4 +1,5 @@
-FROM quay.io/keycloak/keycloak:latest as builder
+FROM quay.io/keycloak/keycloak:latest AS builder
+
 ENV KC_DB=postgres
 
 WORKDIR /opt/keycloak

@@ -10,7 +10,9 @@
     "dockerhub",
     "jdbc",
     "mailpit",
+    "PKCE",
     "Quarkus",
+    "testuser",
     "traefik",
     "traefix",
     "xforwarded"
