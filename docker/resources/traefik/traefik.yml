@@ -1,0 +1,52 @@
+# API設定
+api:
+  dashboard: true
+  debug: true
+  insecure: true
+
+# エントリーポイント設定
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+# プロバイダー設定
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: docker_compose_samples
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
+
+# SSL証明書設定
+tls:
+  options:
+    default:
+      minVersion: "VersionTLS12"
+      cipherSuites:
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+
+# ログ設定
+log:
+  level: INFO
+  format: json
+
+accessLog:
+  format: json
+  fields:
+    headers:
+      defaultMode: keep
+      names:
+        Authorization: drop
+        Cookie: drop
+
+# メトリクス設定
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true

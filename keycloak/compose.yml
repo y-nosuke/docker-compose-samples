@@ -69,8 +69,17 @@ services:
       # - start
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.keycloak.rule=Host(`keycloak.localhost`)"
-      - "traefik.http.routers.keycloak.entrypoints=web"
+      # HTTP用ルーター
+      - "traefik.http.routers.keycloak-http.rule=Host(`keycloak.localhost`)"
+      - "traefik.http.routers.keycloak-http.entrypoints=web"
+      - "traefik.http.routers.keycloak-http.service=keycloak"
+      # HTTPS用ルーター
+      - "traefik.http.routers.keycloak-https.rule=Host(`keycloak.localhost`)"
+      - "traefik.http.routers.keycloak-https.entrypoints=websecure"
+      - "traefik.http.routers.keycloak-https.tls=true"
+      - "traefik.http.routers.keycloak-https.service=keycloak"
+      # サービス設定
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
 
 networks:
   docker_compose_samples:

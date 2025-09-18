@@ -17,6 +17,12 @@ a161a3b94116   host                         host      local
 docker network rm docker_compose_samples
 ```
 
+## 証明書の発行
+
+```sh
+./docker/resources/traefik/generate-certs.sh
+```
+
 ## 起動(traefik)
 
 ```sh
