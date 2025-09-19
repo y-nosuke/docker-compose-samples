@@ -58,11 +58,13 @@ resource "keycloak_openid_client" "postman" {
   name    = "Postman Client"
   enabled = true
 
-  access_type                  = "PUBLIC"
-  standard_flow_enabled        = true
-  implicit_flow_enabled        = true
-  direct_access_grants_enabled = true
-  service_accounts_enabled     = false
+  access_type                               = "CONFIDENTIAL"
+  standard_flow_enabled                     = true
+  implicit_flow_enabled                     = true
+  direct_access_grants_enabled              = true
+  service_accounts_enabled                  = true
+  oauth2_device_authorization_grant_enabled = true
+  standard_token_exchange_enabled           = true
 
   valid_redirect_uris = [
     "https://oauth.pstmn.io/v1/callback",

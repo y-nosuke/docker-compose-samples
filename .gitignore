@@ -1,4 +1,5 @@
 */docker/volumes
 .terraform
 terraform.tfstate*
+.terraform.tfstate*
 docker/resources/traefik/certs
