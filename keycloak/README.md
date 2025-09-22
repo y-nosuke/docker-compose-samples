@@ -16,7 +16,7 @@ traefixによりリバースプロキシを利用するための設定です。
 ## 管理画面
 
 - [keycloak 管理画面](http://keycloak.localhost/admin)
-- [keycloak アカウント画面](http://keycloak.localhost/realms/myrealm/account)
+- [keycloak アカウント画面](http://keycloak.localhost/realms/app-realm/account)
 - [mailpit 管理画面](http://mailpit.localhost/)
 
 ## export & import

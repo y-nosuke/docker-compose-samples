@@ -17,5 +17,10 @@
     "traefik",
     "traefix",
     "xforwarded"
-  ]
+  ],
+  "markdownlint.config": {
+    "default": true,
+    "MD036": false,
+    "MD024": false
+  }
 }
