@@ -10,7 +10,7 @@ export function generateAuthUrl() {
   // セッション保存（stateをキーにしてcode_verifierを保存）
   saveSession(state, { codeVerifier, timestamp: Date.now() });
 
-  const baseUrl = `${config.keycloak.baseUrl}${config.keycloak.endpoints.auth}`;
+  const baseUrl = config.keycloak.endpoints.auth;
   const params = new URLSearchParams({
     client_id: config.keycloak.clientId,
     redirect_uri: config.oidc.redirectUri,

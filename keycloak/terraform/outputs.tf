@@ -56,7 +56,7 @@ output "keycloak_account_console_url" {
 
 output "openid_connect_discovery_url" {
   description = "OpenID Connect discovery URL"
-  value       = "${var.keycloak_url}/realms/${var.realm_name}/.well-known/openid_configuration"
+  value       = "${var.keycloak_url}/realms/${var.realm_name}/.well-known/openid-configuration"
 }
 
 output "authorization_url" {

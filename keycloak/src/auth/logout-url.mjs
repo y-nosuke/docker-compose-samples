@@ -2,7 +2,7 @@ import { config } from "../config.mjs";
 
 // ログアウトURL生成
 export function generateLogoutUrl() {
-  const baseUrl = `${config.keycloak.baseUrl}${config.keycloak.endpoints.logout}`;
+  const baseUrl = config.keycloak.endpoints.logout;
   const params = new URLSearchParams({
     client_id: config.keycloak.clientId,
     post_logout_redirect_uri: config.oidc.logoutRedirectUri,

@@ -16,6 +16,7 @@
     "tfstate",
     "traefik",
     "traefix",
+    "userinfo",
     "xforwarded"
   ],
   "markdownlint.config": {

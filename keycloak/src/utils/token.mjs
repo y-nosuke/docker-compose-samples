@@ -3,7 +3,7 @@ import { config } from "../config.mjs";
 
 // トークン取得関数（学習用のシンプル実装）
 export async function getTokenFromCode(code, codeVerifier) {
-  const tokenUrl = `${config.keycloak.baseUrl}${config.keycloak.endpoints.token}`;
+  const tokenUrl = config.keycloak.endpoints.token;
 
   const postData = new URLSearchParams({
     grant_type: "authorization_code",
