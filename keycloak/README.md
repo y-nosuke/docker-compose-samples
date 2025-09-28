@@ -24,10 +24,13 @@ traefixによりリバースプロキシを利用するための設定です。
 ### コマンド
 
 ```sh
-/opt/keycloak/bin/kc.sh export --file /tmp/realm.json --realm sample
+# WSLでは書き込み権限の付与が必要なよう
+sudo chmod +w docker/resources/keycloak/import
+
+docker exec -it keycloak /opt/keycloak/bin/kc.sh export --dir /opt/keycloak/data/import --realm app-realm --optimized
 # exportした後はauthorizationSettingsを削除する。
 
-/opt/keycloak/bin/kc.sh import --file /tmp/realm.json
+docker exec -it keycloak /opt/keycloak/bin/kc.sh import --dir /opt/keycloak/data/import
 ```
 
 - [Importing and Exporting Realms](https://www.keycloak.org/server/importExport)

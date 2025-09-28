@@ -62,11 +62,14 @@ services:
       - KC_PROXY_HEADERS=xforwarded
     depends_on:
       - postgres
+    volumes:
+      - ./docker/resources/keycloak/import:/opt/keycloak/data/import
     networks:
       - docker_compose_samples
     command:
       - start-dev
       # - start
+      - --import-realm
     labels:
       - "traefik.enable=true"
       # HTTP用ルーター
