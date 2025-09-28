@@ -8,14 +8,19 @@ output "realm_name" {
   value       = keycloak_realm.app_realm.realm
 }
 
-output "postman_client_id" {
-  description = "ID of the Postman client"
-  value       = keycloak_openid_client.postman.client_id
+output "postman_public_client_id" {
+  description = "ID of the Postman public client"
+  value       = keycloak_openid_client.postman_public.client_id
 }
 
-output "postman_client_secret" {
-  description = "Secret of the Postman client"
-  value       = keycloak_openid_client.postman.client_secret
+output "postman_confidential_client_id" {
+  description = "ID of the Postman confidential client"
+  value       = keycloak_openid_client.postman_confidential.client_id
+}
+
+output "postman_confidential_client_secret" {
+  description = "Secret of the Postman confidential client"
+  value       = keycloak_openid_client.postman_confidential.client_secret
   sensitive   = true
 }
 

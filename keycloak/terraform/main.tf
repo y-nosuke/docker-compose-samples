@@ -50,15 +50,53 @@ resource "keycloak_realm" "app_realm" {
   registration_flow      = "registration"
 }
 
-# Postman用Client
-resource "keycloak_openid_client" "postman" {
+# Postman用パブリッククライアント（Client authentication: OFF）
+resource "keycloak_openid_client" "postman_public" {
   realm_id  = keycloak_realm.app_realm.id
-  client_id = "postman"
+  client_id = "postman-public"
 
-  name    = "Postman Client"
+  name    = "Postman Public Client"
   enabled = true
 
-  access_type                               = "CONFIDENTIAL"
+  # パブリッククライアント（Client authentication: OFF）
+  access_type = "PUBLIC"
+
+  # 認証フロー設定
+  standard_flow_enabled                     = true
+  implicit_flow_enabled                     = true
+  direct_access_grants_enabled              = true
+  oauth2_device_authorization_grant_enabled = true
+  # パブリッククライアントではstandard_token_exchangeは使用不可
+  standard_token_exchange_enabled = false
+
+  # PKCE設定（パブリッククライアントでは推奨）
+  pkce_code_challenge_method = "S256"
+
+  valid_redirect_uris = [
+    "https://oauth.pstmn.io/v1/callback",
+    "http://localhost:*",
+    "https://localhost:*"
+  ]
+
+  web_origins = [
+    "https://oauth.pstmn.io",
+    "http://localhost:*",
+    "https://localhost:*"
+  ]
+}
+
+# Postman用コンフィデンシャルクライアント（Client authentication: ON）
+resource "keycloak_openid_client" "postman_confidential" {
+  realm_id  = keycloak_realm.app_realm.id
+  client_id = "postman-confidential"
+
+  name    = "Postman Confidential Client"
+  enabled = true
+
+  # コンフィデンシャルクライアント（Client authentication: ON）
+  access_type = "CONFIDENTIAL"
+
+  # 認証フロー設定
   standard_flow_enabled                     = true
   implicit_flow_enabled                     = true
   direct_access_grants_enabled              = true
