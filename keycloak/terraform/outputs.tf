@@ -24,6 +24,23 @@ output "postman_confidential_client_secret" {
   sensitive   = true
 }
 
+output "postman_signed_jwt_client_id" {
+  description = "ID of the Postman Signed JWT client"
+  value       = keycloak_openid_client.postman_signed_jwt.client_id
+}
+
+# output "postman_signed_jwt_public_key" {
+#   description = "Public key of the Postman Signed JWT client"
+#   value       = keycloak_openid_client_keystore.postman_signed_jwt_keys.public_key
+#   sensitive   = true
+# }
+
+# output "postman_signed_jwt_private_key" {
+#   description = "Private key of the Postman Signed JWT client"
+#   value       = keycloak_openid_client_keystore.postman_signed_jwt_keys.private_key
+#   sensitive   = true
+# }
+
 output "android_client_id" {
   description = "ID of the Android OIDC client"
   value       = keycloak_openid_client.android_oidc.client_id

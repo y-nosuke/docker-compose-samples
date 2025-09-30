@@ -117,6 +117,60 @@ resource "keycloak_openid_client" "postman_confidential" {
   ]
 }
 
+# Postman用Signed JWTクライアント（Client authentication: Signed JWT）
+resource "keycloak_openid_client" "postman_signed_jwt" {
+  realm_id  = keycloak_realm.app_realm.id
+  client_id = "postman-signed-jwt"
+
+  name    = "Postman Signed JWT Client"
+  enabled = true
+
+  # コンフィデンシャルクライアント（Client authentication: Signed JWT）
+  access_type = "CONFIDENTIAL"
+
+  # Signed JWT認証設定
+  client_authenticator_type = "client-jwt"
+
+  # 認証フロー設定
+  standard_flow_enabled                     = true
+  implicit_flow_enabled                     = true
+  direct_access_grants_enabled              = true
+  service_accounts_enabled                  = true
+  oauth2_device_authorization_grant_enabled = true
+  standard_token_exchange_enabled           = true
+
+  valid_redirect_uris = [
+    "https://oauth.pstmn.io/v1/callback",
+    "http://localhost:*",
+    "https://localhost:*"
+  ]
+
+  web_origins = [
+    "https://oauth.pstmn.io",
+    "http://localhost:*",
+    "https://localhost:*"
+  ]
+
+  # Signed JWT設定（ローカルキー使用）
+  extra_config = {
+    "client_assertion_audience" = "https://keycloak.localhost/realms/app-realm"
+    "client_assertion_issuer"   = "postman-signed-jwt"
+    # ローカルキーを使用（JWKS URLは使用しない）
+    "use.jwks.url" = "false"
+  }
+}
+
+# Postman Signed JWTクライアント用のRSAキー生成
+# resource "keycloak_openid_client_keystore" "postman_signed_jwt_keys" {
+#   realm_id  = keycloak_realm.app_realm.id
+#   client_id = keycloak_openid_client.postman_signed_jwt.id
+
+#   # RSAキー生成設定
+#   keystore_type = "RSA"
+#   key_size      = 2048
+#   key_algorithm = "RSA"
+# }
+
 # Android用Client
 resource "keycloak_openid_client" "android_oidc" {
   realm_id  = keycloak_realm.app_realm.id
