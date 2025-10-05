@@ -1,24 +1,37 @@
 services:
   redis:
     image: redis
-    container_name: redis-container
+    container_name: redis
     restart: always
     ports:
-      - '6379:6379'
+      - "6379:6379"
     environment:
       TZ: JST-9
     volumes:
       - ./docker/volumes/redis/data:/data
     command: redis-server --appendonly yes --requirepass foobared
+    networks:
+      - docker_compose_samples
 
   redis-commander:
     image: rediscommander/redis-commander:latest
-    container_name: redis-commander-container
+    container_name: redis-commander
     restart: always
-    ports:
-      - '8081:8081'
+    # ports:
+    #   - "8081:8081"
     environment:
-      REDIS_HOSTS: Index0:redis-container:6379:0:foobared,Index1:redis-container:6379:1:foobared
+      REDIS_HOSTS: Index0:redis:6379:zero:foobared,Index1:redis:6379:one:foobared
       TZ: JST-9
     depends_on:
       - redis
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.redis-commander.rule=Host(`redis-commander.localhost`)"
+      - "traefik.http.routers.redis-commander.entrypoints=web"
+      - "traefik.http.services.redis-commander.loadbalancer.server.port=8081"
+
+networks:
+  docker_compose_samples:
+    external: true
