@@ -1,0 +1,116 @@
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    hostname: otel-collector.localhost
+    restart: unless-stopped
+    volumes:
+      - ./docker/resources/otel/config.yaml:/etc/otel-collector-config.yaml:ro
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    depends_on:
+      - loki
+      - tempo
+      - mimir
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.otel-collector.rule=Host(`otel-collector.localhost`)"
+      - "traefik.http.routers.otel-collector.entrypoints=web"
+      - "traefik.http.services.otel-collector.loadbalancer.server.port=4318"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    hostname: prometheus.localhost
+    command:
+      - --config.file=/etc/prometheus.yaml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=exemplar-storage
+      - --enable-feature=native-histograms
+    volumes:
+      - ./docker/resources/prometheus/config.yaml:/etc/prometheus.yaml
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.localhost`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+
+  loki:
+    image: grafana/loki:3.4.4
+    container_name: loki
+    restart: unless-stopped
+    networks:
+      - docker_compose_samples
+    volumes:
+      - ./docker/resources/loki/config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+
+  mimir:
+    image: grafana/mimir:latest
+    container_name: mimir
+    restart: unless-stopped
+    command: ["-config.file=/etc/mimir/config.yaml"]
+    ports:
+      # ingesterが起動しないので、確認するために一時的にポートを開ける
+      - "9009:9009" # HTTP API
+    volumes:
+      - ./docker/resources/mimir/config.yaml:/etc/mimir/config.yaml:ro
+      - mimir_data:/mimir
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mimir.rule=Host(`mimir.localhost`)"
+      - "traefik.http.routers.mimir.entrypoints=web"
+      - "traefik.http.services.mimir.loadbalancer.server.port=9009"
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    volumes:
+      - ./docker/resources/tempo/config.yaml:/etc/tempo/config.yaml:ro
+      - tempo_data:/var/tempo
+    networks:
+      - docker_compose_samples
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    hostname: grafana.localhost
+    restart: unless-stopped
+    volumes:
+      - ./docker/resources/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=false
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor traceQLStreaming metricsSummary
+    depends_on:
+      - prometheus
+      - loki
+      - mimir
+      - tempo
+    networks:
+      - docker_compose_samples
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+volumes:
+  loki_data:
+  mimir_data:
+  tempo_data:
+  grafana_data:
+
+networks:
+  docker_compose_samples:
+    external: true
