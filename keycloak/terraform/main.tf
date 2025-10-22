@@ -261,6 +261,68 @@ resource "keycloak_openid_client" "test_server" {
   consent_required = false # 学習用なのでconsentは無効
 }
 
+# Next.js用パブリッククライアント
+resource "keycloak_openid_client" "nextjs_public" {
+  realm_id  = keycloak_realm.app_realm.id
+  client_id = "nextjs-app"
+
+  name    = "Next.js Public Client"
+  enabled = true
+
+  # パブリッククライアント（Client authentication: OFF）
+  access_type = "PUBLIC"
+
+  # 認証フロー設定
+  standard_flow_enabled        = true  # Authorization Code Flow
+  direct_access_grants_enabled = false # Direct Access Grants: OFF
+  implicit_flow_enabled        = false # Implicit Flow: OFF
+  service_accounts_enabled     = false # Service Accounts: OFF
+
+  # PKCE設定（パブリッククライアントでは必須）
+  pkce_code_challenge_method = "S256"
+
+  # Next.js用リダイレクトURI設定
+  valid_redirect_uris = [
+    "http://localhost:3000/callback",
+    "http://localhost:3000/silent-renew",
+    "http://127.0.0.1:3000/callback",
+    "http://127.0.0.1:3000/silent-renew",
+    "https://localhost:3000/callback",
+    "https://localhost:3000/silent-renew",
+  ]
+
+  # ログアウト後のリダイレクトURI
+  valid_post_logout_redirect_uris = [
+    "http://localhost:3000/logout",
+    "http://127.0.0.1:3000/logout",
+    "https://localhost:3000/logout",
+  ]
+
+  # CORS用Webオリジン設定
+  web_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://localhost:3000"
+  ]
+
+  # トークン設定
+  access_token_lifespan       = "1800"  # 30 minutes
+  client_session_idle_timeout = "3600"  # 1 hour
+  client_session_max_lifespan = "28800" # 8 hours
+
+  # リフレッシュトークン設定
+  use_refresh_tokens = true
+
+  # 同意画面設定（Next.jsアプリでは通常無効）
+  consent_required = false
+
+  # 詳細設定
+  description = "Next.jsアプリケーション用のパブリッククライアント。Authorization Code Flow + PKCEを使用。"
+
+  # ログイン設定
+  login_theme = "keycloak"
+}
+
 # テストユーザー作成
 resource "keycloak_user" "testuser" {
   realm_id = keycloak_realm.app_realm.id
