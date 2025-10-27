@@ -4,7 +4,7 @@ services:
     container_name: mailpit
     restart: unless-stopped
     volumes:
-      - ./docker/volumes/mailpit:/data
+      - mailpit_data:/data
     environment:
       MP_MAX_MESSAGES: 5000
       MP_DATABASE: /data/mailpit.db
@@ -28,7 +28,7 @@ services:
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: keycloak
     volumes:
-      - ./docker/volumes/postgresql:/var/lib/postgresql/data
+      - postgresql_data:/var/lib/postgresql/data
     networks:
       - docker_compose_samples
 
@@ -83,6 +83,10 @@ services:
       - "traefik.http.routers.keycloak-https.service=keycloak"
       # サービス設定
       - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+
+volumes:
+  mailpit_data:
+  postgresql_data:
 
 networks:
   docker_compose_samples:
