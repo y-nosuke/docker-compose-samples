@@ -15,6 +15,20 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
+    "id" : "01f9c2d3-483c-4f68-bc04-cc29fff776b1",
+    "username" : "service-account-postman-signed-jwt",
+    "emailVerified" : false,
+    "enabled" : true,
+    "createdTimestamp" : 1761573385325,
+    "totp" : false,
+    "serviceAccountClientId" : "postman-signed-jwt",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-app-realm" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
     "id" : "7ddcdd23-0298-4cdf-b688-d61587708598",
     "username" : "testuser",
     "firstName" : "Test",
