@@ -1,0 +1,48 @@
+services:
+  samba4:
+    image: linuxcrafts/samba-ad-dc:latest
+    container_name: samba4
+    hostname: dc1.localhost
+    restart: unless-stopped
+    cap_add:
+      - SYS_ADMIN
+    volumes:
+      - samba_data:/var/lib/samba
+      - samba_etc:/etc/samba
+    environment:
+      - DNS_DOMAIN=example.local
+      - DNS_FORWARDER=8.8.8.8
+      - WORKGROUP=EXAMPLE
+      - NETBIOS_NAME=DC1
+      - DNS_BACKEND=SAMBA_INTERNAL
+      - FUNCTION_LEVEL=2008_R2
+      - ROLE=dc
+      - BACKEND_STORE=tdb
+      - ENABLE_USER_PROFILES=false
+      - ADMIN_PASSWORD=Passw0rd!
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "88:88/tcp"
+      - "88:88/udp"
+      - "135:135/tcp"
+      - "137-138:137-138/udp"
+      - "139:139/tcp"
+      - "389:389/tcp"
+      - "389:389/udp"
+      # - "445:445/tcp"
+      - "464:464/tcp"
+      - "464:464/udp"
+      - "3268:3268/tcp"
+      - "3269:3269/tcp"
+      - "49152-49160:49152-49160/tcp"
+    networks:
+      - docker_compose_samples
+
+volumes:
+  samba_data:
+  samba_etc:
+
+networks:
+  docker_compose_samples:
+    external: true
