@@ -10,9 +10,18 @@
     "dockerhub",
     "jdbc",
     "mailpit",
+    "PKCE",
     "Quarkus",
+    "testuser",
+    "tfstate",
     "traefik",
     "traefix",
+    "userinfo",
     "xforwarded"
-  ]
+  ],
+  "markdownlint.config": {
+    "default": true,
+    "MD036": false,
+    "MD024": false
+  }
 }

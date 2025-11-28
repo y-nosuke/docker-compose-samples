@@ -4,7 +4,7 @@
 
 ## 管理画面
 
-- [redis-commander](http://localhost:8081/)
+- [redis-commander](http://redis-commander.localhost/)
 
 ## 動作確認
 

@@ -1,21 +1,28 @@
 services:
-
   traefik:
     image: traefik
     container_name: traefik
-    restart: always
+    restart: unless-stopped
     ports:
-      - "80:80"
-      - "8080:8080"
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+      - "8080:8080" # Traefik Dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker/resources/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./docker/resources/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./docker/resources/traefik/certs:/etc/ssl/traefik:ro
     networks:
       - docker_compose_samples
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
+    environment:
+      - TRAEFIK_LOG_LEVEL=INFO
+      - TRAEFIK_ACCESSLOG=true
+    labels:
+      # Dashboard設定
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`dashboard.localhost`)"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.service=api@internal"
 
 networks:
   docker_compose_samples:

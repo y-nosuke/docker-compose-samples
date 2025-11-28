@@ -1,7 +1,25 @@
 services:
-  # postgres
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    restart: unless-stopped
+    volumes:
+      - mailpit_data:/data
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailpit.rule=Host(`mailpit.localhost`)"
+      - "traefik.http.routers.mailpit.entrypoints=web"
+      - "traefik.http.services.mailpit.loadbalancer.server.port=8025"
+    networks:
+      - docker_compose_samples
+
   postgres:
-    image: postgres:13.0-alpine
+    image: postgres:16-alpine
     container_name: postgres
     restart: always
     environment:
@@ -10,11 +28,10 @@ services:
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: keycloak
     volumes:
-      - ./docker/volumes/postgresql:/var/lib/postgresql/data
+      - postgresql_data:/var/lib/postgresql/data
     networks:
       - docker_compose_samples
 
-  # keycloak
   keycloak:
     build:
       context: ./
@@ -22,13 +39,16 @@ services:
     container_name: keycloak
     hostname: keycloak.localhost
     restart: always
-    # ports:
-    #   - 8080:8080
+    ports:
+      - 8081:8080
     environment:
       #   基本設定
       - TZ=Asia/Tokyo
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_BOOTSTRAP_ADMIN_EMAIL=admin@sample.localhost
+      - KC_BOOTSTRAP_ADMIN_FIRSTNAME=Admin
+      - KC_BOOTSTRAP_ADMIN_LASTNAME=User
       - KC_HOSTNAME=keycloak.localhost
       # - KC_HOSTNAME_ADMIN=keycloak.localhost
       - KC_HTTP_ENABLED=true
@@ -42,15 +62,31 @@ services:
       - KC_PROXY_HEADERS=xforwarded
     depends_on:
       - postgres
+    volumes:
+      - ./docker/resources/keycloak/import:/opt/keycloak/data/import
     networks:
       - docker_compose_samples
     command:
       - start-dev
       # - start
+      - --import-realm
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.keycloak.rule=Host(`keycloak.localhost`)"
-      - "traefik.http.routers.keycloak.entrypoints=web"
+      # HTTP用ルーター
+      - "traefik.http.routers.keycloak-http.rule=Host(`keycloak.localhost`)"
+      - "traefik.http.routers.keycloak-http.entrypoints=web"
+      - "traefik.http.routers.keycloak-http.service=keycloak"
+      # HTTPS用ルーター
+      - "traefik.http.routers.keycloak-https.rule=Host(`keycloak.localhost`)"
+      - "traefik.http.routers.keycloak-https.entrypoints=websecure"
+      - "traefik.http.routers.keycloak-https.tls=true"
+      - "traefik.http.routers.keycloak-https.service=keycloak"
+      # サービス設定
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+
+volumes:
+  mailpit_data:
+  postgresql_data:
 
 networks:
   docker_compose_samples:
