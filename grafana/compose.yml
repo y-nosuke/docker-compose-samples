@@ -11,6 +11,9 @@ services:
       - loki
       - tempo
       - mimir
+    ports:
+      - "4317:4317" # OTLP grpc receiver
+      - "4318:4318" # OTLP http receiver
     networks:
       - docker_compose_samples
     labels:
