@@ -30,7 +30,7 @@ services:
       PMA_USER: root
       PMA_PASSWORD: password
     volumes:
-      - ./docker/volumes/phpmyadmin/sessions:/sessions
+      - phpmyadmin_sessions:/sessions
     depends_on:
       - mysql
     networks:
@@ -39,6 +39,9 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.phpmyadmin.rule=Host(`phpmyadmin.localhost`)"
       - "traefik.http.routers.phpmyadmin.entrypoints=web"
+
+volumes:
+  phpmyadmin_sessions:
 
 networks:
   docker_compose_samples:

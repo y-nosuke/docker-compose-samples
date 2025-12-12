@@ -1,22 +1,10 @@
--- DB作成
-CREATE DATABASE sample_db;
+SET NAMES utf8mb4;
 
--- 作成したDBに接続
-\c sample_db;
+-- 商品管理用データベース作成
+CREATE DATABASE IF NOT EXISTS product_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- テーブル作成
-DROP TABLE IF EXISTS sample;
-CREATE TABLE sample (
-	id integer NOT NULL PRIMARY KEY,
-	name char(100) NOT NULL,
-	created_date_time timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- ID用シーケンス作成
-CREATE SEQUENCE sample_id_seq START 1;
-
--- サンブルデータの登録
-INSERT INTO sample (id, name) VALUES(nextval('sample_id_seq'), 'sample name');
+-- 作成したデータベースを使用
+USE product_db;
 
 -- 商品テーブル作成
 DROP TABLE IF EXISTS orders;
@@ -25,23 +13,23 @@ CREATE TABLE products (
 	product_id VARCHAR(255) NOT NULL PRIMARY KEY,
 	name VARCHAR(255) NOT NULL,
 	description TEXT,
-	price INTEGER NOT NULL,
+	price INT NOT NULL,
 	category VARCHAR(100) NOT NULL,
-	stock INTEGER NOT NULL DEFAULT 0,
+	stock INT NOT NULL DEFAULT 0,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 注文テーブル作成
 CREATE TABLE orders (
 	order_id VARCHAR(255) NOT NULL PRIMARY KEY,
 	product_id VARCHAR(255) NOT NULL,
-	quantity INTEGER NOT NULL,
-	total_price INTEGER NOT NULL,
+	quantity INT NOT NULL,
+	total_price INT NOT NULL,
 	status VARCHAR(50) NOT NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT fk_order_product FOREIGN KEY (product_id) REFERENCES products(product_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 商品データの登録
 INSERT INTO products (product_id, name, description, price, category, stock, created_at, updated_at) VALUES
@@ -53,3 +41,4 @@ INSERT INTO orders (order_id, product_id, quantity, total_price, status, created
 	('order_001', 'product_123', 2, 2000, 'completed', CURRENT_TIMESTAMP),
 	('order_002', 'product_123', 1, 1000, 'pending', CURRENT_TIMESTAMP),
 	('order_003', 'product_456', 3, 6000, 'completed', CURRENT_TIMESTAMP);
+
