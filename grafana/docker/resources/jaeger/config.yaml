@@ -1,0 +1,43 @@
+# Jaeger v2 設定ファイル
+# 参考: https://github.com/jaegertracing/jaeger/blob/v2.13.0/cmd/jaeger/config-badger.yaml
+# 参考: https://www.jaegertracing.io/docs/2.13/deployment/configuration/
+# 参考: https://www.jaegertracing.io/docs/2.13/storage/badger/
+
+# 拡張機能: Jaegerストレージの設定
+extensions:
+  jaeger_storage:
+    backends:
+      badger_store:
+        badger:
+          directories:
+            keys: /badger
+            values: /badger
+          ephemeral: false
+
+# レシーバー: OTLPプロトコルでトレースデータを受信
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+
+# プロセッサー: バッチ処理
+processors:
+  batch:
+
+# エクスポーター: Jaegerストレージにエクスポート
+exporters:
+  jaeger_storage_exporter:
+    trace_storage: badger_store
+
+# サービス: パイプラインの定義
+service:
+  extensions: [jaeger_storage]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [jaeger_storage_exporter]
+

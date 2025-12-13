@@ -6,11 +6,12 @@ services:
     restart: unless-stopped
     volumes:
       - ./docker/resources/otel/config.yaml:/etc/otel-collector-config.yaml:ro
+      - ./docker/volumes/otel-collector:/data
     command: ["--config=/etc/otel-collector-config.yaml"]
     depends_on:
-      - loki
       - tempo
-      - mimir
+      - loki
+      - mimir-lb
     ports:
       - "4317:4317" # OTLP grpc receiver
       - "4318:4318" # OTLP http receiver
@@ -21,6 +22,136 @@ services:
       - "traefik.http.routers.otel-collector.rule=Host(`otel-collector.localhost`)"
       - "traefik.http.routers.otel-collector.entrypoints=web"
       - "traefik.http.services.otel-collector.loadbalancer.server.port=4318"
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    volumes:
+      - ./docker/resources/tempo/config.yaml:/etc/tempo/config.yaml:ro
+      - tempo_data:/var/tempo
+    networks:
+      - docker_compose_samples
+
+  prepare-jaeger-data:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.13.0
+    user: root
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["mkdir -p /badger && touch /badger/.initialized && chown -R 10001:10001 /badger"]
+    volumes:
+      - jaeger_data:/badger
+    restart: "no"
+
+  jeager:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.13.0
+    container_name: jaeger
+    hostname: jaeger.localhost
+    restart: always
+    command: ["--config=/jaeger/config.yaml"]
+    volumes:
+      - ./docker/resources/jaeger/config.yaml:/jaeger/config.yaml:ro
+      - jaeger_data:/badger
+    networks:
+      - docker_compose_samples
+    depends_on:
+      prepare-jaeger-data:
+        condition: service_completed_successfully
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jaeger.rule=Host(`jaeger.localhost`)"
+      - "traefik.http.routers.jaeger.entrypoints=web"
+      - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    hostname: zipkin.localhost
+    restart: always
+    #    ports:
+    #      - "9411:9411"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.zipkin.rule=Host(`zipkin.localhost`)"
+      - "traefik.http.routers.zipkin.entrypoints=web"
+      - "traefik.http.services.zipkin.loadbalancer.server.port=9411"
+
+  loki:
+    image: grafana/loki:3.6.3
+    container_name: loki
+    restart: unless-stopped
+    networks:
+      - docker_compose_samples
+    volumes:
+      - ./docker/resources/loki/config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+
+  mimir-lb:
+    image: nginx:latest
+    container_name: mimir-lb
+    hostname: mimir.localhost
+    volumes:
+      - ./docker/resources/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - "mimir-1"
+      - "mimir-2"
+      - "mimir-3"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mimir.rule=Host(`mimir.localhost`)"
+      - "traefik.http.routers.mimir.entrypoints=web"
+      - "traefik.http.services.mimir.loadbalancer.server.port=9009"
+
+  mimir-1:
+    image: grafana/mimir:latest
+    container_name: mimir-1
+    hostname: mimir-1.localhost
+    command: [ "-config.file=/etc/mimir.yaml", "-auth.multitenancy-enabled=false" ]
+    depends_on:
+      - "minio"
+    volumes:
+      - ./docker/resources/mimir/mimir.yaml:/etc/mimir.yaml
+      - mimir_1_data:/data
+
+  mimir-2:
+    image: grafana/mimir:latest
+    command: [ "-config.file=/etc/mimir.yaml", "-auth.multitenancy-enabled=false" ]
+    container_name: mimir-2
+    hostname: mimir-2.localhost
+    depends_on:
+      - "minio"
+    volumes:
+      - ./docker/resources/mimir/mimir.yaml:/etc/mimir.yaml
+      - mimir_2_data:/data
+
+  mimir-3:
+    image: grafana/mimir:latest
+    command: [ "-config.file=/etc/mimir.yaml", "-auth.multitenancy-enabled=false" ]
+    container_name: mimir-3
+    hostname: mimir-3.localhost
+    depends_on:
+      - "minio"
+    volumes:
+      - ./docker/resources/mimir/mimir.yaml:/etc/mimir.yaml
+      - mimir_3_data:/data
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    hostname: minio.localhost
+    entrypoint: [ "" ]
+    command: [ "sh", "-c", "mkdir -p /data/mimir && minio server --console-address :9001 --quiet /data" ]
+    environment:
+      - MINIO_ROOT_USER=mimir
+      - MINIO_ROOT_PASSWORD=supersecret
+    volumes:
+      - minio_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=Host(`minio.localhost`)"
+      - "traefik.http.routers.minio.entrypoints=web"
+      - "traefik.http.services.minio.loadbalancer.server.port=9001"
 
   prometheus:
     image: prom/prometheus:latest
@@ -41,47 +172,6 @@ services:
       - "traefik.http.routers.prometheus.rule=Host(`prometheus.localhost`)"
       - "traefik.http.routers.prometheus.entrypoints=web"
 
-  loki:
-    image: grafana/loki:3.4.4
-    container_name: loki
-    restart: unless-stopped
-    networks:
-      - docker_compose_samples
-    volumes:
-      - ./docker/resources/loki/config.yaml:/etc/loki/local-config.yaml:ro
-      - loki_data:/loki
-    command: ["-config.file=/etc/loki/local-config.yaml"]
-
-  mimir:
-    image: grafana/mimir:latest
-    container_name: mimir
-    restart: unless-stopped
-    command: ["-config.file=/etc/mimir/config.yaml"]
-    ports:
-      # ingesterが起動しないので、確認するために一時的にポートを開ける
-      - "9009:9009" # HTTP API
-    volumes:
-      - ./docker/resources/mimir/config.yaml:/etc/mimir/config.yaml:ro
-      - mimir_data:/mimir
-    networks:
-      - docker_compose_samples
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.mimir.rule=Host(`mimir.localhost`)"
-      - "traefik.http.routers.mimir.entrypoints=web"
-      - "traefik.http.services.mimir.loadbalancer.server.port=9009"
-
-  tempo:
-    image: grafana/tempo:latest
-    container_name: tempo
-    restart: unless-stopped
-    command: ["-config.file=/etc/tempo/config.yaml"]
-    volumes:
-      - ./docker/resources/tempo/config.yaml:/etc/tempo/config.yaml:ro
-      - tempo_data:/var/tempo
-    networks:
-      - docker_compose_samples
-
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -97,10 +187,10 @@ services:
       - GF_AUTH_DISABLE_LOGIN_FORM=false
       - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor traceQLStreaming metricsSummary
     depends_on:
-      - prometheus
-      - loki
-      - mimir
       - tempo
+      - loki
+      - mimir-lb
+      - prometheus
     networks:
       - docker_compose_samples
     labels:
@@ -110,9 +200,13 @@ services:
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
 volumes:
-  loki_data:
-  mimir_data:
   tempo_data:
+  jaeger_data:
+  loki_data:
+  mimir_1_data:
+  mimir_2_data:
+  mimir_3_data:
+  minio_data:
   grafana_data:
 
 networks:

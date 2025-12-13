@@ -8,8 +8,9 @@ datasources:
     orgId: 1
     url: http://tempo:3200
     basicAuth: false
-    isDefault: false
+    isDefault: true
     version: 1
+    readOnly: false
     editable: true
     apiVersion: 1
     jsonData:
@@ -18,16 +19,31 @@ datasources:
         datasourceUid: prometheus
       lokiSearch:
         datasourceUid: loki
+      nodeGraph:
+        enabled: false
       tracesToLogsV2:
         datasourceUid: loki
         spanStartTimeShift: -1h
         spanEndTimeShift: 1h
         tags:
-          [{ key: "container" }, { key: "service.name", value: "service_name" }]
+          - key: 'container'
+          - key: 'service.name'
+            value: 'service_name'
         filterByTraceID: false
         filterBySpanID: false
         customQuery: true
         query: '{$${__tags}} | trace_id="$${__span.traceId}"'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        queries:
+          - name: p99 latency
+            query: 'histogram_quantile(.99, sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[1m])) by (le))'
+        spanEndTimeShift: 1h
+        spanStartTimeShift: -1h
+        tags:
+          - key: 'container'
+          - key: 'service.name'
+            value: 'service_name'
 
   - name: Loki
     type: loki
@@ -36,8 +52,9 @@ datasources:
     orgId: 1
     url: http://loki:3100
     basicAuth: false
-    isDefault: true
+    isDefault: false
     version: 1
+    readOnly: false
     editable: true
     jsonData:
       derivedFields:
@@ -46,19 +63,24 @@ datasources:
           matcherRegex: trace_id
           matcherType: label
           name: traceID
-          url: "$${__value.raw}"
+          url: '$${__value.raw}'
 
   - name: Mimir
     type: prometheus
-    access: proxy
-    url: http://mimir:9009/prometheus
     uid: mimir
+    access: proxy
+    orgId: 1
+    url: http://mimir-lb:9009/prometheus
+    version: 1
+    basicAuth: false
     isDefault: false
+    readOnly: false
     editable: true
     jsonData:
-      timeInterval: "15s"
-      queryTimeout: "60s"
-      httpMethod: "POST"
+      exemplarTraceIdDestinations:
+        - datasourceUid: tempo
+          name: traceID
+      httpMethod: GET
 
   - name: Prometheus
     type: prometheus
@@ -69,6 +91,10 @@ datasources:
     basicAuth: false
     isDefault: false
     version: 1
+    readOnly: false
     editable: true
     jsonData:
+      exemplarTraceIdDestinations:
+        - datasourceUid: tempo
+          name: trace_id
       httpMethod: GET
