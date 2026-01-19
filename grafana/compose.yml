@@ -17,11 +17,6 @@ services:
       - "4318:4318" # OTLP http receiver
     networks:
       - docker_compose_samples
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.otel-collector.rule=Host(`otel-collector.localhost`)"
-      - "traefik.http.routers.otel-collector.entrypoints=web"
-      - "traefik.http.services.otel-collector.loadbalancer.server.port=4318"
 
   tempo:
     image: grafana/tempo:latest
@@ -70,6 +65,8 @@ services:
     restart: always
     #    ports:
     #      - "9411:9411"
+    networks:
+      - docker_compose_samples
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.zipkin.rule=Host(`zipkin.localhost`)"
@@ -97,6 +94,8 @@ services:
       - "mimir-1"
       - "mimir-2"
       - "mimir-3"
+    networks:
+      - docker_compose_samples
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.mimir.rule=Host(`mimir.localhost`)"
@@ -113,6 +112,8 @@ services:
     volumes:
       - ./docker/resources/mimir/mimir.yaml:/etc/mimir.yaml
       - mimir_1_data:/data
+    networks:
+      - docker_compose_samples
 
   mimir-2:
     image: grafana/mimir:latest
@@ -124,6 +125,8 @@ services:
     volumes:
       - ./docker/resources/mimir/mimir.yaml:/etc/mimir.yaml
       - mimir_2_data:/data
+    networks:
+      - docker_compose_samples
 
   mimir-3:
     image: grafana/mimir:latest
@@ -135,6 +138,8 @@ services:
     volumes:
       - ./docker/resources/mimir/mimir.yaml:/etc/mimir.yaml
       - mimir_3_data:/data
+    networks:
+      - docker_compose_samples
 
   minio:
     image: minio/minio
@@ -147,6 +152,8 @@ services:
       - MINIO_ROOT_PASSWORD=supersecret
     volumes:
       - minio_data:/data
+    networks:
+      - docker_compose_samples
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.minio.rule=Host(`minio.localhost`)"
