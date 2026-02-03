@@ -33,12 +33,15 @@ services:
     image: cr.jaegertracing.io/jaegertracing/jaeger:2.13.0
     user: root
     entrypoint: ["/bin/sh", "-c"]
-    command: ["mkdir -p /badger && touch /badger/.initialized && chown -R 10001:10001 /badger"]
+    command:
+      [
+        "mkdir -p /badger && touch /badger/.initialized && chown -R 10001:10001 /badger",
+      ]
     volumes:
       - jaeger_data:/badger
     restart: "no"
 
-  jeager:
+  jaeger:
     image: cr.jaegertracing.io/jaegertracing/jaeger:2.13.0
     container_name: jaeger
     hostname: jaeger.localhost
@@ -94,6 +97,8 @@ services:
       - "mimir-1"
       - "mimir-2"
       - "mimir-3"
+    ports:
+      - "9009:9009"
     networks:
       - docker_compose_samples
     labels:
@@ -106,37 +111,49 @@ services:
     image: grafana/mimir:latest
     container_name: mimir-1
     hostname: mimir-1.localhost
-    command: [ "-config.file=/etc/mimir.yaml", "-auth.multitenancy-enabled=false" ]
+    command:
+      - "-config.file=/etc/config.yaml"
     depends_on:
       - "minio"
+      - "minio-setup"
     volumes:
-      - ./docker/resources/mimir/mimir.yaml:/etc/mimir.yaml
+      - ./docker/resources/mimir/config.yaml:/etc/config.yaml
+      - ./docker/resources/mimir/runtime.yaml:/etc/mimir/runtime.yaml:ro
+      - ./docker/resources/mimir/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml:ro
       - mimir_1_data:/data
     networks:
       - docker_compose_samples
 
   mimir-2:
     image: grafana/mimir:latest
-    command: [ "-config.file=/etc/mimir.yaml", "-auth.multitenancy-enabled=false" ]
+    command:
+      - "-config.file=/etc/config.yaml"
     container_name: mimir-2
     hostname: mimir-2.localhost
     depends_on:
       - "minio"
+      - "minio-setup"
     volumes:
-      - ./docker/resources/mimir/mimir.yaml:/etc/mimir.yaml
+      - ./docker/resources/mimir/config.yaml:/etc/config.yaml
+      - ./docker/resources/mimir/runtime.yaml:/etc/mimir/runtime.yaml:ro
+      - ./docker/resources/mimir/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml:ro
       - mimir_2_data:/data
     networks:
       - docker_compose_samples
 
   mimir-3:
     image: grafana/mimir:latest
-    command: [ "-config.file=/etc/mimir.yaml", "-auth.multitenancy-enabled=false" ]
+    command:
+      - "-config.file=/etc/config.yaml"
     container_name: mimir-3
     hostname: mimir-3.localhost
     depends_on:
       - "minio"
+      - "minio-setup"
     volumes:
-      - ./docker/resources/mimir/mimir.yaml:/etc/mimir.yaml
+      - ./docker/resources/mimir/config.yaml:/etc/config.yaml
+      - ./docker/resources/mimir/runtime.yaml:/etc/mimir/runtime.yaml:ro
+      - ./docker/resources/mimir/alertmanager-fallback-config.yaml:/etc/alertmanager-fallback-config.yaml:ro
       - mimir_3_data:/data
     networks:
       - docker_compose_samples
@@ -145,8 +162,13 @@ services:
     image: minio/minio
     container_name: minio
     hostname: minio.localhost
-    entrypoint: [ "" ]
-    command: [ "sh", "-c", "mkdir -p /data/mimir && minio server --console-address :9001 --quiet /data" ]
+    entrypoint: [""]
+    command:
+      [
+        "sh",
+        "-c",
+        "mkdir -p /data/mimir && minio server --console-address :9001 --quiet /data",
+      ]
     environment:
       - MINIO_ROOT_USER=mimir
       - MINIO_ROOT_PASSWORD=supersecret
@@ -159,6 +181,23 @@ services:
       - "traefik.http.routers.minio.rule=Host(`minio.localhost`)"
       - "traefik.http.routers.minio.entrypoints=web"
       - "traefik.http.services.minio.loadbalancer.server.port=9001"
+
+  minio-setup:
+    image: minio/mc:latest
+    container_name: minio-setup
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5 &&
+      mc alias set localminio http://minio:9000 mimir supersecret &&
+      mc mb localminio/mimir-blocks || true &&
+      mc mb localminio/mimir-ruler || true &&
+      mc mb localminio/mimir-alertmanager || true
+      "
+    networks:
+      - docker_compose_samples
 
   prometheus:
     image: prom/prometheus:latest

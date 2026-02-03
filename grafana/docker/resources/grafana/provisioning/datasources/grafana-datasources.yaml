@@ -20,7 +20,7 @@ datasources:
       lokiSearch:
         datasourceUid: loki
       nodeGraph:
-        enabled: false
+        enabled: true
       tracesToLogsV2:
         datasourceUid: loki
         spanStartTimeShift: -1h

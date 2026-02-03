@@ -13,29 +13,50 @@ receivers:
             - "*"
 
 processors:
-  # バッチ処理でパフォーマンス最適化
-  batch:
-    timeout: 1s
-    send_batch_size: 1024
-    send_batch_max_size: 2048
-
   # メモリ制限
   memory_limiter:
     limit_mib: 200
     spike_limit_mib: 50
     check_interval: 5s
 
+  # バッチ処理でパフォーマンス最適化
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+connectors:
+  spanmetrics:
+    dimensions:
+      - name: service.instance.id
+        default: unknown
+    histogram:
+      exponential:
+    metrics_flush_interval: 10s
+    metrics_expiration: 5m
+    # mimirはDELTA temporalityをサポートしていない
+    aggregation_temporality: AGGREGATION_TEMPORALITY_CUMULATIVE
+
 exporters:
-  debug:
   file/traces:
-    path: /data/traces
-    format: json
+    path: /data/traces.jsonl
+    rotation:
+      max_megabytes: 10
+      max_days: 7
+      max_backups: 10
   file/logs:
-    path: /data/logs
-    format: json
+    path: /data/logs.jsonl
+    rotation:
+      max_megabytes: 10
+      max_days: 7
+      max_backups: 10
   file/metrics:
-    path: /data/metrics
-    format: json
+    path: /data/metrics.jsonl
+    rotation:
+      max_megabytes: 10
+      max_days: 7
+      max_backups: 10
+
   otlp/tempo:
     endpoint: http://tempo:4317
     tls:
@@ -44,15 +65,21 @@ exporters:
     endpoint: http://jaeger:4317
     tls:
       insecure: true
-  otlphttp/loki:
-    endpoint: http://loki:3100/otlp
-  otlphttp/mimir:
-    endpoint: http://mimir-lb:9009/otlp
   zipkin:
     endpoint: "http://zipkin:9411/api/v2/spans"
     format: proto
+
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+
+  otlphttp/mimir:
+    endpoint: http://mimir-lb:9009/otlp
+
   prometheus:
     endpoint: "0.0.0.0:8889"
+
+  debug:
+    verbosity: normal
 
 extensions:
   health_check:
@@ -80,6 +107,7 @@ service:
   telemetry:
     logs:
       level: "info"
+      encoding: json
       processors:
         - batch:
             exporter:

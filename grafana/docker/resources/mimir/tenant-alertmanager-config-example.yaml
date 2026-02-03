@@ -1,0 +1,187 @@
+# テナント固有のAlertmanager設定例
+#
+# 使用方法:
+#   mimirtool alertmanager load \
+#     --address=http://mimir.localhost:9009 \
+#     --id=<tenant-id> \
+#     tenant-alertmanager-config-example.yaml
+#
+# 注意事項:
+#   - シークレット（パスワード、APIキーなど）は環境変数を使用してください
+#   - ファイルベースのシークレット（*_file）はAPIでは使用できません
+#   - ${VAR_NAME}形式で環境変数を参照できます
+
+# グローバル設定
+global:
+  # アラート解決のタイムアウト
+  resolve_timeout: 5m
+
+  # SMTP設定（メール通知用）
+  smtp_smarthost: 'smtp.example.com:587'
+  smtp_from: 'alerts@example.com'
+  smtp_auth_username: 'alerts@example.com'
+  # パスワードは環境変数を使用（API経由で設定する場合）
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_require_tls: true
+
+# ルーティング設定
+route:
+  # デフォルトのレシーバー
+  receiver: 'default'
+
+  # アラートをグループ化するラベル
+  group_by: ['alertname', 'cluster', 'service']
+
+  # グループ化されたアラートを送信するまでの待機時間
+  group_wait: 10s
+
+  # 同じグループ内で新しいアラートが発生した場合の送信間隔
+  group_interval: 10s
+
+  # アラートが解決されない場合の再送信間隔
+  repeat_interval: 1h
+
+  # ルーティングルール（優先度順）
+  routes:
+    # 重大度がcriticalのアラートは即座に送信
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 0s
+      repeat_interval: 5m
+      continue: false
+
+    # 重大度がwarningのアラート
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 30s
+      repeat_interval: 30m
+      continue: false
+
+    # 特定のサービスに関するアラート
+    - match:
+        service: 'database'
+      receiver: 'database-team'
+      continue: false
+
+    # 特定のクラスタに関するアラート
+    - match:
+        cluster: 'production'
+      receiver: 'production-alerts'
+      continue: false
+
+# 抑制ルール（アラートの重複を防ぐ）
+inhibit_rules:
+  # criticalアラートが発生している場合、同じアラートのwarningを抑制
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']
+
+  # サービス全体がダウンしている場合、個別のインスタンスアラートを抑制
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '.*InstanceDown'
+    equal: ['service', 'cluster']
+
+# レシーバー（通知先）の設定
+receivers:
+  # デフォルトのレシーバー
+  - name: 'default'
+    email_configs:
+      - to: 'alerts@example.com'
+        headers:
+          Subject: 'Alert: {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>アラート通知</h2>
+          <p><strong>アラート名:</strong> {{ .GroupLabels.alertname }}</p>
+          <p><strong>重大度:</strong> {{ .CommonLabels.severity }}</p>
+          <p><strong>開始時刻:</strong> {{ .StartsAt }}</p>
+          <hr>
+          <h3>ラベル:</h3>
+          <ul>
+          {{ range .CommonLabels.SortedPairs }}
+            <li><strong>{{ .Name }}:</strong> {{ .Value }}</li>
+          {{ end }}
+          </ul>
+          <hr>
+          <h3>アノテーション:</h3>
+          <ul>
+          {{ range .CommonAnnotations.SortedPairs }}
+            <li><strong>{{ .Name }}:</strong> {{ .Value }}</li>
+          {{ end }}
+          </ul>
+          <hr>
+          <p><a href="{{ .ExternalURL }}">Alertmanagerで確認</a></p>
+
+  # 重大度がcriticalのアラート用レシーバー
+  - name: 'critical-alerts'
+    # メール通知
+    email_configs:
+      - to: 'critical-alerts@example.com'
+        headers:
+          Subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
+        html: |
+          <h2 style="color: red;">重大なアラート</h2>
+          <p><strong>アラート名:</strong> {{ .GroupLabels.alertname }}</p>
+          <p><strong>開始時刻:</strong> {{ .StartsAt }}</p>
+          <p><a href="{{ .ExternalURL }}">詳細を確認</a></p>
+
+    # Slack通知
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#critical-alerts'
+        title: '🚨 Critical Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          *アラート名:* {{ .GroupLabels.alertname }}
+          *重大度:* {{ .CommonLabels.severity }}
+          *開始時刻:* {{ .StartsAt }}
+          *詳細:* {{ .CommonAnnotations.description }}
+        color: 'danger'
+        send_resolved: true
+
+    # PagerDuty通知（オプション）
+    # pagerduty_configs:
+    #   - service_key: '${PAGERDUTY_SERVICE_KEY}'
+    #     description: '{{ .GroupLabels.alertname }}'
+
+  # 重大度がwarningのアラート用レシーバー
+  - name: 'warning-alerts'
+    email_configs:
+      - to: 'warning-alerts@example.com'
+        headers:
+          Subject: '[WARNING] {{ .GroupLabels.alertname }}'
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#warning-alerts'
+        title: '⚠️ Warning: {{ .GroupLabels.alertname }}'
+        color: 'warning'
+
+  # データベースチーム用レシーバー
+  - name: 'database-team'
+    email_configs:
+      - to: 'database-team@example.com'
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#database-alerts'
+
+  # 本番環境用レシーバー
+  - name: 'production-alerts'
+    email_configs:
+      - to: 'production-oncall@example.com'
+
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#production-alerts'
+
+    # Webhook通知（カスタム統合用）
+    webhook_configs:
+      - url: '${WEBHOOK_URL}'
+        http_config:
+          bearer_token: '${WEBHOOK_BEARER_TOKEN}'
+        send_resolved: true

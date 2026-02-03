@@ -1,0 +1,113 @@
+# Runtime configuration file for Mimir Overrides-exporter
+# このファイルは実行中に定期的にリロードされ、再起動なしで設定を変更できます
+# SaaS用マルチカスタマー設定: 各顧客テナントに対して個別のリソース制限を設定できます
+
+# Overrides設定
+# 各顧客テナントに対して個別のリソース制限を設定できます
+# X-Scope-OrgIDヘッダーでテナントIDを指定してリクエストを識別します
+overrides:
+  # Enterpriseプラン顧客（最高レベルの制限値）
+  "customer-enterprise-001":
+    ingestion_rate: 100000
+    ingestion_burst_size: 200000
+    max_global_series_per_user: 10000000
+    max_global_series_per_metric: 200000
+    max_global_metadata_per_user: 100000
+    max_global_metadata_per_metric: 100
+    max_query_parallelism: 32
+
+  "customer-enterprise-002":
+    ingestion_rate: 100000
+    ingestion_burst_size: 200000
+    max_global_series_per_user: 10000000
+    max_global_series_per_metric: 200000
+    max_global_metadata_per_user: 100000
+    max_global_metadata_per_metric: 100
+    max_query_parallelism: 32
+
+  # Proプラン顧客（高レベルの制限値）
+  "customer-pro-001":
+    ingestion_rate: 50000
+    ingestion_burst_size: 100000
+    max_global_series_per_user: 5000000
+    max_global_series_per_metric: 100000
+    max_global_metadata_per_user: 50000
+    max_global_metadata_per_metric: 50
+    max_query_parallelism: 16
+
+  "customer-pro-002":
+    ingestion_rate: 50000
+    ingestion_burst_size: 100000
+    max_global_series_per_user: 5000000
+    max_global_series_per_metric: 100000
+    max_global_metadata_per_user: 50000
+    max_global_metadata_per_metric: 50
+    max_query_parallelism: 16
+
+  "customer-pro-003":
+    ingestion_rate: 50000
+    ingestion_burst_size: 100000
+    max_global_series_per_user: 5000000
+    max_global_series_per_metric: 100000
+    max_global_metadata_per_user: 50000
+    max_global_metadata_per_metric: 50
+    max_query_parallelism: 16
+
+  # Basicプラン顧客（中レベルの制限値）
+  "customer-basic-001":
+    ingestion_rate: 20000
+    ingestion_burst_size: 40000
+    max_global_series_per_user: 2000000
+    max_global_series_per_metric: 50000
+    max_global_metadata_per_user: 20000
+    max_global_metadata_per_metric: 30
+    max_query_parallelism: 8
+
+  "customer-basic-002":
+    ingestion_rate: 20000
+    ingestion_burst_size: 40000
+    max_global_series_per_user: 2000000
+    max_global_series_per_metric: 50000
+    max_global_metadata_per_user: 20000
+    max_global_metadata_per_metric: 30
+    max_query_parallelism: 8
+
+  "customer-basic-003":
+    ingestion_rate: 20000
+    ingestion_burst_size: 40000
+    max_global_series_per_user: 2000000
+    max_global_series_per_metric: 50000
+    max_global_metadata_per_user: 20000
+    max_global_metadata_per_metric: 30
+    max_query_parallelism: 8
+
+  # Freeプラン顧客（低レベルの制限値）
+  "customer-free-001":
+    ingestion_rate: 5000
+    ingestion_burst_size: 10000
+    max_global_series_per_user: 500000
+    max_global_series_per_metric: 10000
+    max_global_metadata_per_user: 5000
+    max_global_metadata_per_metric: 10
+    max_query_parallelism: 4
+
+  "customer-free-002":
+    ingestion_rate: 5000
+    ingestion_burst_size: 10000
+    max_global_series_per_user: 500000
+    max_global_series_per_metric: 10000
+    max_global_metadata_per_user: 5000
+    max_global_metadata_per_metric: 10
+    max_query_parallelism: 4
+
+  # デフォルトテナント（新規顧客や未設定のテナント用）
+  # マルチテナンシー有効時でも、テナントIDが指定されない場合は空文字列("")が使用されます
+  # Freeプラン相当の制限を適用
+  "":
+    ingestion_rate: 5000
+    ingestion_burst_size: 10000
+    max_global_series_per_user: 500000
+    max_global_series_per_metric: 10000
+    max_global_metadata_per_user: 5000
+    max_global_metadata_per_metric: 10
+    max_query_parallelism: 4

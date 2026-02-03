@@ -1,9 +1,51 @@
-# Do not use this configuration in production.
-# It is for demonstration purposes only.
-# Run Mimir in single process mode, with all components running in 1 process.
-target: all,overrides-exporter
+# モノリシック設定（複数インスタンスでクラスタリング）
+target: all,alertmanager,overrides-exporter
 
-# Configure Mimir to use Minio as object storage backend.
+# マルチテナンシー有効
+# 有効化すると、X-Scope-OrgIDヘッダーでテナントを識別します
+multitenancy_enabled: true
+
+# サーバー設定
+server:
+  http_listen_port: 8080
+  grpc_listen_port: 9095
+  log_level: info
+  # ヘルスチェック用
+  grpc_server_max_recv_msg_size: 104857600
+  grpc_server_max_send_msg_size: 104857600
+
+# memberlist設定（複数インスタンス用）
+# node_nameは各インスタンスでコマンドライン引数で設定されるため、ここでは設定しない
+memberlist:
+  bind_port: 7946
+  bind_addr: [0.0.0.0]
+  # Docker環境でのアドバタイズ設定
+  # 各インスタンスのhostnameを使用（mimir-1, mimir-2, mimir-3）
+  advertise_addr: ""
+  advertise_port: 7946
+  # 複数ノードでのクラスタリング設定
+  gossip_interval: 200ms
+  gossip_nodes: 3
+  # クラスタ内の他のノードを検出するための設定
+  # memberlistは自動的に自分自身を除外するため、全ノードを含めても問題ありません
+  join_members:
+    - mimir-1:7946
+    - mimir-2:7946
+    - mimir-3:7946
+
+# パフォーマンス最適化
+limits:
+  max_global_series_per_user: 1000000
+  ingestion_rate: 10000
+  # インジェスト制限を緩和
+  max_global_series_per_metric: 20000
+  max_global_metadata_per_user: 8000
+  max_global_metadata_per_metric: 10
+  ruler_alertmanager_client_config:
+    alertmanager_url: http://127.0.0.1:8080/alertmanager
+
+# 共通ストレージ設定（全コンポーネントで使用）
+# 複数インスタンスで共有するためS3（minio）を使用
 common:
   storage:
     backend: s3
@@ -12,17 +54,101 @@ common:
       access_key_id: mimir
       secret_access_key: supersecret
       insecure: true
-      bucket_name: mimir
 
-# Blocks storage requires a prefix when using a common object storage bucket.
+# ブロックストレージ設定（メトリクスデータ用）
 blocks_storage:
-  storage_prefix: blocks
+  s3:
+    bucket_name: mimir-blocks
   tsdb:
-    dir: /data/ingester
+    dir: /data/tsdb
+    retention_period: 168h
 
-# Use memberlist, a gossip-based protocol, to enable the 3 Mimir replicas to communicate
-memberlist:
-  join_members: [ mimir-1, mimir-2, mimir-3 ]
+# 分散システムの設定（複数インスタンス用）
+distributor:
+  ring:
+    kvstore:
+      store: memberlist
+    # 複数インスタンス用の設定
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
 
-server:
-  log_level: warn
+# インジェスター設定
+ingester:
+  ring:
+    kvstore:
+      store: memberlist
+    # 3インスタンス用のレプリケーション設定
+    replication_factor: 3
+    # 複数インスタンス用の最適化
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
+    # インスタンスの検出を早める
+    instance_enable_ipv6: false
+    final_sleep: 0s
+
+# コンパクター設定
+compactor:
+  data_dir: /data/compactor
+  sharding_ring:
+    kvstore:
+      store: memberlist
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
+
+# ストアゲートウェイ設定
+store_gateway:
+  sharding_ring:
+    kvstore:
+      store: memberlist
+    # 3インスタンス用のレプリケーション設定
+    replication_factor: 3
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
+
+# Ruler設定（ルール評価用）
+ruler:
+  rule_path: /data/ruler
+  ring:
+    kvstore:
+      store: memberlist
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
+
+# Rulerストレージ設定（ルール定義用）
+ruler_storage:
+  backend: s3
+  s3:
+    bucket_name: mimir-ruler
+
+# アラートマネージャー（オプション）
+alertmanager:
+  data_dir: /data/alertmanager
+  fallback_config_file: /etc/alertmanager-fallback-config.yaml
+  external_url: http://mimir.localhost/alertmanager
+  sharding_ring:
+    kvstore:
+      store: memberlist
+    # 3インスタンス用のレプリケーション設定
+    replication_factor: 3
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
+
+# Alertmanagerストレージ設定（アラート状態用）
+alertmanager_storage:
+  backend: s3
+  s3:
+    bucket_name: mimir-alertmanager
+
+# アクティビティトラッカー（リソース監視用）
+activity_tracker:
+  filepath: /data/metrics-activity.log
+
+# Runtime設定（Overrides-exporter用）
+# Runtime configurationファイルを指定
+# このファイルは実行中に定期的にリロードされ、再起動なしで設定を変更できます
+runtime_config:
+  file: /etc/mimir/runtime.yaml
+
+# 運用管理用設定
+usage_stats:
+  enabled: false
