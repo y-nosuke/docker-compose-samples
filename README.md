@@ -51,6 +51,12 @@ docker compose ps
 docker-compose logs -f
 ```
 
+## ネットワーク内での動作確認
+
+```sh
+docker run -it --rm --entrypoint=sh --network=docker_compose_samples curlimages/curl
+```
+
 ## ダッシュボード
 
 - [dashboard](http://localhost:8080/dashboard/#/)
