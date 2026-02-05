@@ -27,5 +27,9 @@
     "default": true,
     "MD036": false,
     "MD024": false
+  },
+  "[markdown]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }

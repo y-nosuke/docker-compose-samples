@@ -1,27 +1,40 @@
+partition_ring_live_store: true
+stream_over_http_enabled: true
+
 server:
   http_listen_port: 3200
+  log_level: info
 
 distributor:
+  # Kafka経由の分散インジェストを有効化（従来のingesterへの直接書き込みを無効化）
+  ingester_write_path_enabled: false
+  kafka_write_path_enabled: true
   receivers:
-    jaeger:
-      protocols:
-        thrift_http:
-        grpc:
-        thrift_binary:
-        thrift_compact:
-    zipkin:
     otlp:
       protocols:
-        http:
         grpc:
-    opencensus:
+          endpoint: "tempo:4317"
+        http:
+          endpoint: "tempo:4318"
 
-ingester:
-  max_block_duration: 5m
+backend_scheduler:
+  provider:
+    compaction:
+      compaction:
+        block_retention: 1h
 
-compactor:
+backend_worker:
+  # monolithicモード（-target=all）の場合、backend_schedulerは同じプロセス内で実行されるため
+  # localhostを使用する必要があります
+  backend_scheduler_addr: localhost:3200
   compaction:
     block_retention: 1h
+  ring:
+    kvstore:
+      store: memberlist
+
+querier:
+  query_live_store: true
 
 metrics_generator:
   registry:
@@ -29,18 +42,49 @@ metrics_generator:
       source: tempo
       cluster: docker-compose
   storage:
-    path: /tmp/tempo/generator/wal
+    path: /var/tempo/generator/wal
     remote_write:
       - url: http://prometheus:9090/api/v1/write
         send_exemplars: true
 
+query_frontend:
+  rf1_after: "1999-01-01T00:00:00Z"
+  mcp_server:
+    enabled: true
+
 storage:
   trace:
-    backend: local
+    backend: s3
+    s3:
+      bucket: tempo
+      endpoint: minio:9000
+      access_key: tempo
+      secret_key: supersecret
+      insecure: true
     wal:
-      path: /tmp/tempo/wal
-    local:
-      path: /tmp/tempo/blocks
+      path: /var/tempo/wal # where to store the wal locally
 
 overrides:
-  metrics_generator_processors: [service-graphs, span-metrics]
+  defaults:
+    metrics_generator:
+      processors: ["span-metrics", "service-graphs"]
+      generate_native_histograms: both
+
+# 注意: 以下の`ingest`と`block_builder`設定は公式ドキュメント（https://grafana.com/docs/tempo/latest/configuration/）に
+# 記載されていませんが、公式の分散アーキテクチャサンプルで使用されています。
+# 参考: https://github.com/grafana/tempo/blob/main/example/docker-compose/distributed/tempo.yaml
+#
+# ingest: Kafkaからトレースを読み取るコンポーネントの設定
+# block_builder: Kafkaから読み取ったトレースをブロック形式に変換するコンポーネントの設定
+# これらは分散アーキテクチャで使用され、Kafkaを経由したトレースインジェストを可能にします。
+ingest:
+  enabled: true
+  kafka:
+    address: redpanda:9092
+    topic: tempo-ingest
+
+block_builder:
+  consume_cycle_duration: 30s
+
+usage_report:
+  reporting_enabled: false
