@@ -17,6 +17,9 @@ distributor:
         http:
           endpoint: "tempo:4318"
 
+# 注意: 最新のTempo（v2.10以降）では、compactor設定が削除され、
+# backend_schedulerとbackend_workerのみがサポートされています。
+# monolithicモード（-target=all）でも、backend_schedulerとbackend_workerを使用します。
 backend_scheduler:
   provider:
     compaction:
@@ -32,6 +35,8 @@ backend_worker:
   ring:
     kvstore:
       store: memberlist
+  # 注意: "no jobs found"エラーは、まだコンパクション対象のブロックがない場合に
+  # 発生することがあります。これは正常な動作で、ブロックが生成されると解消されます。
 
 querier:
   query_live_store: true
