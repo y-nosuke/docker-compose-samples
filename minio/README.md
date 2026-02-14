@@ -1,6 +1,6 @@
 # minio
 
-これはlocalstackの Docker-Compose です。
+これは minio の Docker-Compose です。
 
 ## 事前準備
 
@@ -23,5 +23,4 @@ mc rb sample/test
 ## 参考
 
 - [Minio](https://min.io/)
-
-- [localstack/localstack](S3互換のminioをdocker-composeで起動(今更))
+- [minio/minio](https://github.com/minio/minio/tree/master)

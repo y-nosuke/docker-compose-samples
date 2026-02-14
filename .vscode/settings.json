@@ -5,14 +5,13 @@
   "files.encoding": "utf8",
   "files.eol": "\n",
   "cSpell.words": [
-    "alertmanager",
-    "alertname",
+    "apppassword",
+    "appuser",
     "axllent",
     "curlimages",
     "distro",
     "dockerhub",
-    "ingester",
-    "jaegertracing",
+    "healthcheck",
     "jdbc",
     "kvstore",
     "localminio",
@@ -25,8 +24,7 @@
     "PKCE",
     "pprof",
     "Quarkus",
-    "smarthost",
-    "spanmetrics",
+    "readwrite",
     "testuser",
     "tfstate",
     "traceql",
@@ -42,5 +40,9 @@
     "default": true,
     "MD036": false,
     "MD024": false
+  },
+  "[markdown]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }

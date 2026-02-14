@@ -2,6 +2,7 @@
   "recommendations": [
     "4ops.terraform",
     "hashicorp.terraform",
-    "hashicorp.hcl"
+    "hashicorp.hcl",
+    "esbenp.prettier-vscode"
   ]
 }
