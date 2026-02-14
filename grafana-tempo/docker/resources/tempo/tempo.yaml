@@ -39,7 +39,9 @@ backend_worker:
   # 発生することがあります。これは正常な動作で、ブロックが生成されると解消されます。
 
 querier:
-  query_live_store: true
+  # partition_ring_live_store: false と合わせて、live store 経由の検索を無効化。
+  # トレースはバックエンド（オブジェクトストレージ）からのみ検索されます。
+  query_live_store: false
 
 metrics_generator:
   registry:
