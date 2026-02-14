@@ -1,7 +1,7 @@
 ---
 global:
   resolve_timeout: 5m
-  smtp_smarthost: mailhog:1025
+  smtp_smarthost: mailpit:1025
   smtp_from: Alertmanager<alertmanager@example.com>
   smtp_require_tls: false
   # slack_api_url: 'https://hooks.slack.com/services/***/***/******'
