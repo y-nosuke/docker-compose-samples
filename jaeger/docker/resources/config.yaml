@@ -1,0 +1,74 @@
+# Jaeger SPM（Service Performance Monitoring）用設定
+# トレース: Badger / メトリクス: PromQL 互換バックエンド（Prometheus）
+# 参考: https://github.com/jaegertracing/jaeger/blob/main/cmd/jaeger/config-badger.yaml
+# 参考: https://www.jaegertracing.io/docs/latest/architecture/spm/
+
+extensions:
+  jaeger_storage:
+    backends:
+      some_storage:
+        badger:
+          directories:
+            keys: "/tmp/jaeger/"
+            values: "/tmp/jaeger/"
+          ephemeral: false
+          ttl:
+            spans: 48h # 2 days
+    metric_backends:
+      some_metrics_storage:
+        prometheus:
+          endpoint: ${env:PROMETHEUS_ENDPOINT:-http://prometheus:9090}
+          normalize_calls: true
+          normalize_duration: true
+
+  jaeger_query:
+    storage:
+      traces: some_storage
+      metrics: some_metrics_storage
+    ui:
+      config_file: /jaeger/config-ui.json
+
+connectors:
+  spanmetrics:
+    metrics_flush_interval: ${env:SPANMETRICS_FLUSH_INTERVAL:-60s}
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "${env:JAEGER_LISTEN_HOST:-0.0.0.0}:4317"
+      http:
+        endpoint: "${env:JAEGER_LISTEN_HOST:-0.0.0.0}:4318"
+
+processors:
+  batch:
+
+exporters:
+  jaeger_storage_exporter:
+    trace_storage: some_storage
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+service:
+  extensions: [jaeger_storage, jaeger_query]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [jaeger_storage_exporter, spanmetrics]
+    metrics/spanmetrics:
+      receivers: [spanmetrics]
+      exporters: [prometheus]
+  telemetry:
+    resource:
+      service.name: jaeger
+    metrics:
+      level: detailed
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: 0.0.0.0
+                port: 8888
+    logs:
+      level: info

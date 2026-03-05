@@ -11,13 +11,13 @@ exporters:
     endpoint: tempo:4317
     tls:
       insecure: true
-  # otlp/jaeger:
-  #   endpoint: http://jaeger:4317
-  #   tls:
-  #     insecure: true
-  # zipkin:
-  #   endpoint: "http://zipkin:9411/api/v2/spans"
-  #   format: proto
+  otlp/jaeger:
+    endpoint: http://jaeger:4317
+    tls:
+      insecure: true
+  zipkin:
+    endpoint: "http://zipkin:9411/api/v2/spans"
+    format: proto
 
 processors:
   batch:
