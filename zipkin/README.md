@@ -20,5 +20,8 @@ traefixによりリバースプロキシを利用するための設定です。
 
 ## 参考
 
+- [Zipkin](https://zipkin.io/)
+
 - [openzipkin/zipkin](https://github.com/openzipkin/zipkin)
+
 - [OpenTelemetry Collectorでデータを一元的に管理する](https://christina04.hatenablog.com/entry/opentelemetry-collector)
